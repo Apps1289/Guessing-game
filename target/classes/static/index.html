@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Guess the Number</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #1e1e2f;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    .game-box {
+      background: #2a2a40;
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+      text-align: center;
+      width: 100%;
+      max-width: 400px;
+      position: relative;
+      z-index: 1;
+    }
+
+    h1 {
+      color: #00b894;
+      margin-bottom: 20px;
+    }
+
+    input[type="number"] {
+      width: 60%;
+      padding: 12px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    button {
+      background-color: #00cec9;
+      color: white;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #0984e3;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #fab1a0;
+    }
+
+    canvas {
+      position: fixed;
+      pointer-events: none;
+      top: 0;
+      left: 0;
+      z-index: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="confetti-canvas"></canvas>
+
+  <div class="game-box">
+    <h1>Guess the Number</h1>
+    <input id="guess" type="number" placeholder="Enter number (0-99)">
+    <br>
+    <button onclick="submitGuess()">Submit</button>
+    <p id="result"></p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script>
+    let gameOver = false;
+
+    fetch("/start")
+        .then(res => res.text())
+        .then(msg => {
+            document.getElementById("result").innerText = msg;
+        });
+
+    function submitGuess() {
+        if (gameOver) return;
+
+        const guess = document.getElementById("guess").value;
+        fetch("/guess", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ guess: parseInt(guess) })
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById("result").innerText = data.result;
+            document.getElementById("attempts").innerText = "Attempts: " + data.attempt + "/10";
+            document.getElementById("score").innerText = "Score: " + data.score;
+
+            if (data.gameOver) {
+                gameOver = true;
+                if (data.score > 0) celebrate();
+            }
+        });
+    }
+
+    function celebrate() {
+        const duration = 3 * 1000;
+        const animationEnd = Date.now() + duration;
+        const defaults = { startVelocity: 25, spread: 360, ticks: 60, zIndex: 0 };
+
+        const interval = setInterval(function() {
+            const timeLeft = animationEnd - Date.now();
+            if (timeLeft <= 0) clearInterval(interval);
+
+            const particleCount = 50 * (timeLeft / duration);
+            confetti(Object.assign({}, defaults, {
+                particleCount,
+                origin: { x: Math.random(), y: Math.random() - 0.2 }
+            }));
+        }, 250);
+    }
+</script>
+
+</body>
+</html>
