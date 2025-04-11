@@ -1,5 +1,6 @@
 # Use an available Maven + OpenJDK image to build the app
-FROM maven:3.8.6-eclipse-temurin-17 AS build
+FROM maven:3.8.6-openjdk-17 AS build
+
 
 # Set working directory
 WORKDIR /app
