@@ -25,29 +25,19 @@
     </dependency>
 </dependencies>
 
-  <build>
-    <plugins>
-        <!-- ✅ Add version here -->
-        <plugin>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-maven-plugin</artifactId>
-            <version>3.2.2</version>
-        </plugin>
-
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-jar-plugin</artifactId>
-            <version>3.2.0</version>
-            <configuration>
-                <archive>
-                    <manifest>
-                        <mainClass>com.example.game.GuessingGameApplication</mainClass>
-                    </manifest>
-                </archive>
-            </configuration>
-        </plugin>
-    </plugins>
+ <build>
+  <plugins>
+    <plugin>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-maven-plugin</artifactId>
+      <version>3.2.2</version>
+      <configuration>
+        <mainClass>com.example.game.GuessingGameApplication</mainClass>
+      </configuration>
+    </plugin>
+  </plugins>
 </build>
+
 </project>
 
 
