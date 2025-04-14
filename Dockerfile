@@ -20,8 +20,8 @@ FROM openjdk:17-jdk-slim
 WORKDIR /app
 
 # Copy the JAR from the build image
-COPY --from=build /app/target/guessing-game-1.0.0.jar .
+COPY --from=build /app/target/guessing-game-1.0.0-SNAPSHOT.jar app.jar
 
 # Run the application
-CMD ["java", "-jar", "guessing-game-1.0.0.jar"]
+CMD ["java", "-jar", "app.jar"]
 
