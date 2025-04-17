@@ -87,6 +87,8 @@
     <input id="guess" type="number" placeholder="Enter number (0-99)">
     <br>
     <button onclick="submitGuess()">Submit</button>
+<button onclick="restartGame()" style="margin-left: 10px; background-color: #ff7675;">Restart</button>
+
     <p id="result"></p>
   </div>
 
@@ -101,6 +103,18 @@
         });
 
     function submitGuess() {
+        function restartGame() {
+  fetch("/start")
+    .then(res => res.text())
+    .then(msg => {
+      document.getElementById("result").innerText = msg;
+      document.getElementById("attempts").innerText = "Attempts: 0/10";
+      document.getElementById("score").innerText = "Score: 0";
+      document.getElementById("guess").value = "";
+      gameOver = false;
+    });
+}
+
         if (gameOver) return;
 
         const guess = document.getElementById("guess").value;
