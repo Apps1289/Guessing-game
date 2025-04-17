@@ -34,6 +34,13 @@
       <configuration>
         <mainClass>com.example.game.GuessingGameApplication</mainClass>
       </configuration>
+             <executions>
+        <execution>
+          <goals>
+            <goal>repackage</goal> <!-- ✅ Add this -->
+          </goals>
+        </execution>
+      </executions>
     </plugin>
   </plugins>
 </build>
