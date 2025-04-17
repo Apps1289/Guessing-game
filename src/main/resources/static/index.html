@@ -12,12 +12,36 @@
     body {
       background-color: #1e1e2f;
       color: #ffffff;
+      margin: 0;
+      padding: 0;
+    }
+
+    .top-bar {
+      position: fixed;
+      top: 0;
+      right: 0;
+      padding: 10px 20px;
+      font-size: 16px;
+      background: #2a2a40;
+      border-bottom-left-radius: 10px;
+      box-shadow: -2px 2px 10px rgba(0, 0, 0, 0.4);
+    }
+
+    .note {
+      font-size: 14px;
+      color: #b2bec3;
+      margin-top: 10px;
+      background: #2d2d3d;
+      padding: 10px;
+      border-radius: 10px;
+    }
+
+    .container {
       display: flex;
       align-items: center;
       justify-content: center;
       height: 100vh;
-      margin: 0;
-      overflow: hidden;
+      flex-direction: column;
     }
 
     .game-box {
@@ -55,7 +79,7 @@
       border-radius: 8px;
       font-size: 16px;
       cursor: pointer;
-      margin-top: 10px;
+      margin: 10px 5px 0 5px;
       transition: background 0.3s;
     }
 
@@ -80,79 +104,107 @@
 </head>
 <body>
 
+  <!-- Live Attempt Counter -->
+  <div class="top-bar" id="live-attempts">Attempts: 0/10</div>
+
+  <!-- Confetti -->
   <canvas id="confetti-canvas"></canvas>
 
-  <div class="game-box">
-    <h1>Guess the Number</h1>
-    <input id="guess" type="number" placeholder="Enter number (0-99)">
-    <br>
-    <button onclick="submitGuess()">Submit</button>
-<button onclick="restartGame()" style="margin-left: 10px; background-color: #ff7675;">Restart</button>
+  <div class="container">
+    <div class="game-box">
+      <h1>Guess the Number</h1>
+      <input id="guess" type="number" placeholder="Enter number (0-99)">
+      <br>
+      <button onclick="submitGuess()">Submit</button>
+      <button onclick="restartGame()" style="background-color: #ff7675;">Restart</button>
+      <p id="result"></p>
+      <p id="score">Score: 0</p>
+    </div>
 
-    <p id="result"></p>
+    <div class="note">
+      📝 <strong>Scoring Criteria:</strong><br>
+      You get 10 chances.<br>
+      - Points = (10 - attempt + 1) × 10<br>
+      - Wrong guesses give 0.<br>
+      - Score is awarded only if you guess correctly.
+    </div>
   </div>
 
+  <!-- Celebration Music -->
+  <audio id="cheer-sound" src="https://cdn.pixabay.com/download/audio/2022/03/22/audio_07b70a655f.mp3?filename=small-crowd-cheer-6720.mp3"></audio>
+
+  <!-- Confetti Library -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
   <script>
     let gameOver = false;
 
-    fetch("/start")
+    function initGame() {
+      fetch("/start")
         .then(res => res.text())
         .then(msg => {
-            document.getElementById("result").innerText = msg;
+          document.getElementById("result").innerText = msg;
+          document.getElementById("score").innerText = "Score: 0";
+          document.getElementById("guess").value = "";
+          document.getElementById("live-attempts").innerText = "Attempts: 0/10";
+          gameOver = false;
         });
+    }
+
+    initGame();
 
     function submitGuess() {
-        function restartGame() {
-  fetch("/start")
-    .then(res => res.text())
-    .then(msg => {
-      document.getElementById("result").innerText = msg;
-      document.getElementById("attempts").innerText = "Attempts: 0/10";
-      document.getElementById("score").innerText = "Score: 0";
-      document.getElementById("guess").value = "";
-      gameOver = false;
-    });
-}
+      if (gameOver) return;
 
-        if (gameOver) return;
+      const guess = document.getElementById("guess").value;
+      fetch("/guess", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ guess: parseInt(guess) })
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("result").innerText = data.result;
+        document.getElementById("live-attempts").innerText = "Attempts: " + data.attempt + "/10";
+        document.getElementById("score").innerText = "Score: " + data.score;
 
-        const guess = document.getElementById("guess").value;
-        fetch("/guess", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ guess: parseInt(guess) })
-        })
-        .then(res => res.json())
-        .then(data => {
-            document.getElementById("result").innerText = data.result;
-            document.getElementById("attempts").innerText = "Attempts: " + data.attempt + "/10";
-            document.getElementById("score").innerText = "Score: " + data.score;
+        if (data.gameOver) {
+          gameOver = true;
+          if (data.score > 0) {
+            celebrate();
+            playCheer();
+            document.getElementById("result").innerText += " (Guessed in attempt #" + data.attempt + ")";
+          }
+        }
+      });
+    }
 
-            if (data.gameOver) {
-                gameOver = true;
-                if (data.score > 0) celebrate();
-            }
-        });
+    function restartGame() {
+      initGame();
     }
 
     function celebrate() {
-        const duration = 3 * 1000;
-        const animationEnd = Date.now() + duration;
-        const defaults = { startVelocity: 25, spread: 360, ticks: 60, zIndex: 0 };
+      const duration = 3 * 1000;
+      const animationEnd = Date.now() + duration;
+      const defaults = { startVelocity: 25, spread: 360, ticks: 60, zIndex: 0 };
 
-        const interval = setInterval(function() {
-            const timeLeft = animationEnd - Date.now();
-            if (timeLeft <= 0) clearInterval(interval);
+      const interval = setInterval(function() {
+        const timeLeft = animationEnd - Date.now();
+        if (timeLeft <= 0) clearInterval(interval);
 
-            const particleCount = 50 * (timeLeft / duration);
-            confetti(Object.assign({}, defaults, {
-                particleCount,
-                origin: { x: Math.random(), y: Math.random() - 0.2 }
-            }));
-        }, 250);
+        const particleCount = 50 * (timeLeft / duration);
+        confetti(Object.assign({}, defaults, {
+          particleCount,
+          origin: { x: Math.random(), y: Math.random() - 0.2 }
+        }));
+      }, 250);
     }
-</script>
+
+    function playCheer() {
+      const audio = document.getElementById("cheer-sound");
+      audio.play();
+    }
+  </script>
 
 </body>
 </html>
